@@ -547,6 +547,32 @@ return function(Tiniest: Tiniest)
 			Expect(#zones:getZones()).is(0)
 			zones:destroy()
 		end)
+
+		Test('Destroying a container cleans up parts that also had direct tags.', function()
+			local tag = 'QZ_FROM_TAG_OVERLAP_DESTROY'
+			local model = Instance.new('Model')
+			local part = CreatePart()
+
+			part.Parent = model
+			model.Parent = workspace
+
+			CollectionService:AddTag(part, tag)
+			CollectionService:AddTag(model, tag)
+			local zones = Zone.fromTag(tag)
+
+			Expect(#zones:getZones()).is(1)
+
+			CollectionService:RemoveTag(part, tag)
+			task.wait()
+
+			Expect(#zones:getZones()).is(1)
+
+			model:Destroy()
+			task.wait()
+
+			Expect(#zones:getZones()).is(0)
+			zones:destroy()
+		end)
 	end)
 
 	Describe('Zone:setAutoSync', function()
