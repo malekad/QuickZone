@@ -533,11 +533,11 @@ function Zone.fromTag(
 			zones:add(newZone)
 
 			if watchingAncestry[part] == nil and partDestroyingConnections[part] == nil then
-        partDestroyingConnections[part] = part.Destroying:Connect(function()
-          partRefCount[part] = 1
+				partDestroyingConnections[part] = part.Destroying:Connect(function()
+					partRefCount[part] = 1
 					removePart(part)
-        end)
-      end
+				end)
+			end
 		end
 	end
 
