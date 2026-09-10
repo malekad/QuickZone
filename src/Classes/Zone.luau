@@ -532,7 +532,7 @@ function Zone.fromTag(
 			instanceToZone[part] = newZone
 			zones:add(newZone)
 
-			if watchingAncestry[part] == nil and partDestroyingConnections[part] == nil then
+			if partDestroyingConnections[part] == nil then
 				partDestroyingConnections[part] = part.Destroying:Connect(function()
 					partRefCount[part] = 1
 					removePart(part)
@@ -632,8 +632,12 @@ function Zone.fromTag(
 		for inst in watchingAncestry do
 			stopWatching(inst)
 		end
+		for _, conn in partDestroyingConnections do
+			conn:Disconnect()
+		end
 		table.clear(watchingAncestry)
 		table.clear(containerConnections)
+		table.clear(partDestroyingConnections)
 		table.clear(instanceToZone)
 		table.clear(partRefCount)
 	end)
