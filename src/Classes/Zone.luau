@@ -494,8 +494,29 @@ function Zone.fromTag(
 
 	local watchingAncestry = {} :: { [Instance]: RBXScriptConnection }
 	local containerConnections = {} :: { [Instance]: { RBXScriptConnection } }
+	local partDestroyingConnections = {} :: { [BasePart]: RBXScriptConnection }
 	local instanceToZone = {} :: { [BasePart]: Types.Zone }
 	local partRefCount = {} :: { [BasePart]: number }
+
+	local function removePart(part: BasePart)
+		local count = (partRefCount[part] or 0) - 1
+
+		if count <= 0 then -- No more active tags claim this part, so safe to destroy
+			partRefCount[part] = nil
+			local deadZone = instanceToZone[part]
+			if deadZone then
+				instanceToZone[part] = nil
+				deadZone:destroy()
+			end
+			local destroyingConn = partDestroyingConnections[part]
+			if destroyingConn then
+				destroyingConn:Disconnect()
+				partDestroyingConnections[part] = nil
+			end
+		else
+			partRefCount[part] = count
+		end
+	end
 
 	local function addPart(part: BasePart)
 		local count = (partRefCount[part] or 0) + 1
@@ -510,21 +531,13 @@ function Zone.fromTag(
 			})
 			instanceToZone[part] = newZone
 			zones:add(newZone)
-		end
-	end
 
-	local function removePart(part: BasePart)
-		local count = (partRefCount[part] or 0) - 1
-
-		if count <= 0 then -- No more active tags claim this part, so safe to destroy
-			partRefCount[part] = nil
-			local deadZone = instanceToZone[part]
-			if deadZone then
-				instanceToZone[part] = nil
-				deadZone:destroy()
+			if watchingAncestry[part] == nil then
+				partDestroyingConnections[part] = part.Destroying:Connect(function()
+					partRefCount[part] = 1
+					removePart(part)
+				end)
 			end
-		else
-			partRefCount[part] = count
 		end
 	end
 
