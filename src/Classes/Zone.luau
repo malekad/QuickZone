@@ -535,7 +535,7 @@ function Zone.fromTag(
 			if watchingAncestry[part] == nil and partDestroyingConnections[part] == nil then
         partDestroyingConnections[part] = part.Destroying:Connect(function()
           partRefCount[part] = 1
-          removePart(part)
+					removePart(part)
         end)
       end
 		end
